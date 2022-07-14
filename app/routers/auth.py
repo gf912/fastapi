@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import UserLogin
 from app.utils import *
-from .. import models, utils, oauth2
+from .. import models, utils, oauth2, schemas
 
 router = APIRouter(
     tags=['Authentication']
 )
 
-@router.post("/login")
+@router.post("/login", response_model=schemas.Token)
 def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == user_credentials.email).first()
 
