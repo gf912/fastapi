@@ -3,9 +3,20 @@ from . import models
 from .database import engine
 from .routers import post, user, auth
 from .config import settings
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # instead of putting all the post and user routers in one main file. Split it into router folder
 app.include_router(post.router)
