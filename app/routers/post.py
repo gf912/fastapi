@@ -1,4 +1,6 @@
-from typing import List
+from typing import List, Optional
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from .. import models, schemas, oauth2
 from fastapi import Response, status, HTTPException, Depends
@@ -9,12 +11,17 @@ router = APIRouter(
     tags=['Posts']
 )
 
-@router.get("/posts", response_model=List[schemas.PostResponse])
-def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    posts = db.query(models.Post).all()  # this is just the sql statement!
-    return posts
+@router.get("/posts", response_model=List[schemas.PostVote])
+def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
+              limit: int = 10, skip: int = 0, search: Optional[str] = ""):
 
-@router.get("/post/{id}", response_model=schemas.PostResponse)
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True)\
+        .group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    print(results)
+
+    return results
+
+@router.get("/post/{id}", response_model=schemas.PostBase)
 def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
@@ -22,14 +29,14 @@ def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends
     else:
         return post
 
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostBase)
+def create_post(post: schemas.PostBase, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
 
-    new_post = models.Post(owner_id=current_user.id, **post.dict())  # ** is shortcut to unpack key/value from the dict of the Pydantic Post object
+    new_post = models.Post(owner_id=current_user.id, **post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return post
+    return new_post
 
 
 @router.delete("/post/{id}")
@@ -48,8 +55,8 @@ def delete_post(id: int, status_code=status.HTTP_204_NO_CONTENT, db: Session = D
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/post/{id}", response_model=schemas.PostResponse)
-def update_post(id: int, updated_post: schemas.PostCreate,  db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.put("/post/{id}", response_model=schemas.PostBase)
+def update_post(id: int, updated_post: schemas.PostBase,  db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 

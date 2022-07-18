@@ -1,26 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
-
-# POSTS
-class PostBase(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-
-class PostCreate(PostBase):
-    pass
-
-class PostResponse(BaseModel):
-    title: str
-    content: str
-    # id: int
-    # created_at: datetime
-    # owner_id: int
-
-    class Config:
-        orm_mode = True
+from pydantic import BaseModel, EmailStr, conint
 
 
 # USERS
@@ -32,6 +13,25 @@ class UserResponse(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
+    class Config:
+        orm_mode = True
+
+# POSTS
+class PostBase(BaseModel):
+    id: int
+    created_at: datetime
+    owner_id: int
+    owner: UserResponse
+
+    class Config:
+        orm_mode = True
+
+
+
+class PostVote(BaseModel):
+    Post: PostBase
+    votes: int
+
     class Config:
         orm_mode = True
 
@@ -48,3 +48,9 @@ class Token(BaseModel):
 # data that we gave to the token (such as id, email, etc)
 class TokenData(BaseModel):
     id: Optional[str]
+
+
+# VOTING
+class Vote(BaseModel):
+    post_id: int
+    dir: conint(le=1) # less than 1
