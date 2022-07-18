@@ -19,7 +19,7 @@ depends_on = None
 def upgrade() -> None:
     op.create_table('votes',
                     sa.Column('post_id', sa.Integer(), nullable=False),
-                    sa.Column('user_id', sa.String(), nullable=False),
+                    sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.ForeignKeyConstraint(['post_id'], ['posts.id'], ondelete='CASCADE'),
                     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
                     sa.PrimaryKeyConstraint('user_id', 'post_id')
