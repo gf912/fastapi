@@ -30,7 +30,7 @@ def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends
         return post
 
 @router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostBase)
-def create_post(post: schemas.PostBase, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def create_post(post: schemas.Post, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
 
     new_post = models.Post(owner_id=current_user.id, **post.dict())
     db.add(new_post)
@@ -56,7 +56,7 @@ def delete_post(id: int, status_code=status.HTTP_204_NO_CONTENT, db: Session = D
 
 
 @router.put("/post/{id}", response_model=schemas.PostBase)
-def update_post(id: int, updated_post: schemas.PostBase,  db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def update_post(id: int, updated_post: schemas.Post,  db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 

@@ -17,6 +17,11 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 # POSTS
+class Post(BaseModel):
+    title: str
+    content: str
+    published: bool
+
 class PostBase(BaseModel):
     id: int
     created_at: datetime
